@@ -1,13 +1,20 @@
 package main
 
 import (
+	"database/sql"
+	"github.com/BulizhnikGames/musicapi/internal/database"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
 	"github.com/joho/godotenv"
+	_ "github.com/lib/pq"
 	"log"
 	"net/http"
 	"os"
 )
+
+type apiConfig struct {
+	DB *database.Queries
+}
 
 func main() {
 	err := godotenv.Load(".env")
@@ -17,7 +24,21 @@ func main() {
 
 	portString := os.Getenv("PORT")
 	if portString == "" {
-		log.Fatal("$PORT must be set int .env file")
+		log.Fatal("PORT must be set in .env file")
+	}
+
+	dbURL := os.Getenv("DB_URL")
+	if dbURL == "" {
+		log.Fatal("DB_URL must be set in .env file")
+	}
+
+	conn, err := sql.Open("postgres", dbURL)
+	if err != nil {
+		log.Fatal("Can't connect to database: ", err)
+	}
+
+	apiCfg := apiConfig{
+		DB: database.New(conn),
 	}
 
 	router := chi.NewRouter()
@@ -34,6 +55,9 @@ func main() {
 
 	v1Router.Get("/r", handlerReadiness)
 	v1Router.Get("/err", handlerErr)
+
+	v1Router.Post("/user", apiCfg.handlerCreateUser)
+	v1Router.Get("/user", apiCfg.middlewareAuth(apiCfg.handlerGetUser))
 
 	router.Mount("/v1", v1Router)
 
