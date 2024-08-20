@@ -26,3 +26,8 @@ SELECT songs.* FROM songs
 JOIN artists_songs ON songs.id = artists_songs.song_id
 WHERE songs.name = $1 AND artists_songs.artist_id = $2
 ORDER BY songs.updated_at DESC;
+
+-- name: GetSongsMainArtist :one
+SELECT albums.artist_id FROM albums
+JOIN songs ON songs.album_id = albums.id
+WHERE songs.id = $1;

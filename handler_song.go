@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/BulizhnikGames/musicapi/internal/database"
+	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"log"
 	"net/http"
@@ -88,7 +89,8 @@ func (apiCfg *apiConfig) handlerCreateSong(w http.ResponseWriter, r *http.Reques
 
 func (apiCfg *apiConfig) handlerGetSongs(w http.ResponseWriter, r *http.Request) {
 	type parameters struct {
-		Name string `json:"name"`
+		Name   string `json:"name"`
+		Artist string `json:"artist"`
 	}
 	decoder := json.NewDecoder(r.Body)
 
@@ -96,6 +98,11 @@ func (apiCfg *apiConfig) handlerGetSongs(w http.ResponseWriter, r *http.Request)
 	err := decoder.Decode(&params)
 	if err != nil {
 		responseWithError(w, 400, fmt.Sprintf("Error parsing JSON: %v", err))
+		return
+	}
+
+	if params.Artist != "" {
+		apiCfg.handlerGetArtistsSongs(w, r, params.Name, params.Artist)
 		return
 	}
 
@@ -121,4 +128,30 @@ func (apiCfg *apiConfig) handlerGetSongs(w http.ResponseWriter, r *http.Request)
 	}
 
 	responseWithJSON(w, 200, songs)
+}
+
+func (apiCfg *apiConfig) handlerDeleteSong(w http.ResponseWriter, r *http.Request, user database.User) {
+	songIDStr := chi.URLParam(r, "songID")
+	songID, err := uuid.Parse(songIDStr)
+	if err != nil {
+		responseWithError(w, 400, fmt.Sprintf("Couldn't parse songID: %v", err))
+		return
+	}
+
+	artistID, err := apiCfg.DB.GetSongsMainArtist(r.Context(), songID)
+	if err != nil {
+		responseWithError(w, 404, fmt.Sprintf("Error getting song's artist: %v", err))
+		return
+	}
+	if artistID != user.ID {
+		responseWithError(w, 403, "You need to be main artist of song to delete it")
+		return
+	}
+
+	err = apiCfg.DB.DeleteSongByID(r.Context(), songID)
+	if err != nil {
+		responseWithError(w, 400, fmt.Sprintf("Error deleting song: %v", err))
+	}
+
+	responseWithJSON(w, 200, struct{}{})
 }

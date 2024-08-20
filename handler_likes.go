@@ -9,31 +9,9 @@ import (
 	"net/http"
 )
 
-func (apiCfg *apiConfig) handlerLikeSongByID(w http.ResponseWriter, r *http.Request, user database.User) {
-	songIDStr := chi.URLParam(r, "songID")
-	songID, err := uuid.Parse(songIDStr)
-	if err != nil {
-		responseWithError(w, 400, fmt.Sprintf("Couldn't parse feed follow id: %v", err))
-		return
-	}
-
-	like, err := apiCfg.DB.LikeSong(r.Context(), database.LikeSongParams{
-		UserID: user.ID,
-		SongID: songID,
-	})
-	if err != nil {
-		responseWithError(w, 400, fmt.Sprintf("Couldn't like song: %v", err))
-		return
-	}
-
-	responseWithJSON(w, 201, like)
-}
-
 func (apiCfg *apiConfig) handlerLikeSong(w http.ResponseWriter, r *http.Request, user database.User) {
 	type parameters struct {
-		Name   string `json:"name"`
-		Album  string `json:"album"`
-		Artist string `json:"artist"`
+		ID uuid.UUID `json:"song_id"`
 	}
 	decoder := json.NewDecoder(r.Body)
 
@@ -44,36 +22,9 @@ func (apiCfg *apiConfig) handlerLikeSong(w http.ResponseWriter, r *http.Request,
 		return
 	}
 
-	artist, err := apiCfg.DB.GetArtistByName(r.Context(), params.Artist)
-	if err != nil {
-		responseWithError(w, 404, fmt.Sprintf("Artist not found: %v", err))
-		return
-	}
-
-	songs, err := apiCfg.DB.GetSongsByNameAndArtist(r.Context(), database.GetSongsByNameAndArtistParams{
-		Name:     params.Name,
-		ArtistID: artist.ID,
-	})
-
-	var res *database.Song
-	for _, song := range songs {
-		album, err := apiCfg.DB.GetAlbumByID(r.Context(), song.AlbumID)
-		if err != nil {
-			continue
-		}
-		if album.Name == params.Album {
-			res = &song
-			break
-		}
-	}
-	if res == nil {
-		responseWithError(w, 404, fmt.Sprintf("Song not found"))
-		return
-	}
-
 	like, err := apiCfg.DB.LikeSong(r.Context(), database.LikeSongParams{
 		UserID: user.ID,
-		SongID: (*res).ID,
+		SongID: params.ID,
 	})
 	if err != nil {
 		responseWithError(w, 400, fmt.Sprintf("Couldn't like song: %v", err))
@@ -97,4 +48,22 @@ func (apiCfg *apiConfig) handlerGetUsersLikes(w http.ResponseWriter, r *http.Req
 	}
 
 	responseWithJSON(w, 200, songs)
+}
+
+func (apiCfg *apiConfig) handlerUnlikeSong(w http.ResponseWriter, r *http.Request, user database.User) {
+	songIDStr := chi.URLParam(r, "songID")
+	songID, err := uuid.Parse(songIDStr)
+	if err != nil {
+		responseWithError(w, 400, fmt.Sprintf("Couldn't parse songID: %v", err))
+	}
+
+	err = apiCfg.DB.UnlikeSong(r.Context(), database.UnlikeSongParams{
+		UserID: user.ID,
+		SongID: songID,
+	})
+	if err != nil {
+		responseWithError(w, 400, fmt.Sprintf("Couldn't unlike song: %v", err))
+	}
+
+	responseWithJSON(w, 200, struct{}{})
 }

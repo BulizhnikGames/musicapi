@@ -199,3 +199,16 @@ func (q *Queries) GetSongsByNameAndArtist(ctx context.Context, arg GetSongsByNam
 	}
 	return items, nil
 }
+
+const getSongsMainArtist = `-- name: GetSongsMainArtist :one
+SELECT albums.artist_id FROM albums
+JOIN songs ON songs.album_id = albums.id
+WHERE songs.id = $1
+`
+
+func (q *Queries) GetSongsMainArtist(ctx context.Context, id uuid.UUID) (uuid.UUID, error) {
+	row := q.db.QueryRowContext(ctx, getSongsMainArtist, id)
+	var artist_id uuid.UUID
+	err := row.Scan(&artist_id)
+	return artist_id, err
+}

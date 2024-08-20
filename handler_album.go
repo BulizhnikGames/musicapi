@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/BulizhnikGames/musicapi/internal/database"
+	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"net/http"
 	"time"
@@ -50,7 +51,8 @@ func (apiCfg *apiConfig) handlerCreateAlbum(w http.ResponseWriter, r *http.Reque
 
 func (apiCfg *apiConfig) handlerGetAlbums(w http.ResponseWriter, r *http.Request) {
 	type parameters struct {
-		Name string `json:"name"`
+		Name   string `json:"name"`
+		Artist string `json:"artist"`
 	}
 	decoder := json.NewDecoder(r.Body)
 
@@ -58,6 +60,11 @@ func (apiCfg *apiConfig) handlerGetAlbums(w http.ResponseWriter, r *http.Request
 	err := decoder.Decode(&params)
 	if err != nil {
 		responseWithError(w, 400, fmt.Sprintf("Error parsing JSON: %v", err))
+		return
+	}
+
+	if params.Artist != "" {
+		apiCfg.handlerGetArtistsAlbums(w, r, params.Name, params.Artist)
 		return
 	}
 
@@ -83,4 +90,30 @@ func (apiCfg *apiConfig) handlerGetAlbums(w http.ResponseWriter, r *http.Request
 	}
 
 	responseWithJSON(w, 200, albums)
+}
+
+func (apiCfg *apiConfig) handlerDeleteAlbum(w http.ResponseWriter, r *http.Request, user database.User) {
+	albumIDStr := chi.URLParam(r, "albumID")
+	albumID, err := uuid.Parse(albumIDStr)
+	if err != nil {
+		responseWithError(w, 400, fmt.Sprintf("Couldn't parse album id: %v", err))
+		return
+	}
+
+	album, err := apiCfg.DB.GetAlbumByID(r.Context(), albumID)
+	if err != nil {
+		responseWithError(w, 404, fmt.Sprintf("Error getting album with id %v: %v", albumID, err))
+		return
+	}
+	if album.ArtistID != user.ID {
+		responseWithError(w, 403, "You need to be an artist of album to delete it")
+		return
+	}
+
+	err = apiCfg.DB.DeleteAlbum(r.Context(), albumID)
+	if err != nil {
+		responseWithError(w, 400, fmt.Sprintf("Error deleting album: %v", err))
+	}
+
+	responseWithJSON(w, 200, struct{}{})
 }

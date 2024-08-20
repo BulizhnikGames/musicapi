@@ -44,3 +44,78 @@ func (q *Queries) CreatePlayList(ctx context.Context, arg CreatePlayListParams) 
 	)
 	return i, err
 }
+
+const deletePlaylist = `-- name: DeletePlaylist :exec
+DELETE FROM playlists
+WHERE id = $1
+`
+
+func (q *Queries) DeletePlaylist(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.ExecContext(ctx, deletePlaylist, id)
+	return err
+}
+
+const getPlaylistByID = `-- name: GetPlaylistByID :one
+SELECT id, created_at, updated_at, name, owner_id FROM playlists
+WHERE id = $1
+`
+
+func (q *Queries) GetPlaylistByID(ctx context.Context, id uuid.UUID) (Playlist, error) {
+	row := q.db.QueryRowContext(ctx, getPlaylistByID, id)
+	var i Playlist
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Name,
+		&i.OwnerID,
+	)
+	return i, err
+}
+
+const getPlaylistsOwnerID = `-- name: GetPlaylistsOwnerID :one
+SELECT owner_id FROM playlists
+WHERE id = $1
+`
+
+func (q *Queries) GetPlaylistsOwnerID(ctx context.Context, id uuid.UUID) (uuid.UUID, error) {
+	row := q.db.QueryRowContext(ctx, getPlaylistsOwnerID, id)
+	var owner_id uuid.UUID
+	err := row.Scan(&owner_id)
+	return owner_id, err
+}
+
+const getUsersPlaylists = `-- name: GetUsersPlaylists :many
+SELECT id, created_at, updated_at, name, owner_id FROM playlists
+WHERE owner_id = $1
+ORDER BY name ASC
+`
+
+func (q *Queries) GetUsersPlaylists(ctx context.Context, ownerID uuid.UUID) ([]Playlist, error) {
+	rows, err := q.db.QueryContext(ctx, getUsersPlaylists, ownerID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Playlist
+	for rows.Next() {
+		var i Playlist
+		if err := rows.Scan(
+			&i.ID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.Name,
+			&i.OwnerID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

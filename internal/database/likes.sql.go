@@ -76,3 +76,18 @@ func (q *Queries) LikeSong(ctx context.Context, arg LikeSongParams) (Like, error
 	err := row.Scan(&i.UserID, &i.SongID)
 	return i, err
 }
+
+const unlikeSong = `-- name: UnlikeSong :exec
+DELETE FROM likes
+WHERE user_id = $1 AND song_id = $2
+`
+
+type UnlikeSongParams struct {
+	UserID uuid.UUID
+	SongID uuid.UUID
+}
+
+func (q *Queries) UnlikeSong(ctx context.Context, arg UnlikeSongParams) error {
+	_, err := q.db.ExecContext(ctx, unlikeSong, arg.UserID, arg.SongID)
+	return err
+}

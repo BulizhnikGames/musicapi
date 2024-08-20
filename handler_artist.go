@@ -1,35 +1,19 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/BulizhnikGames/musicapi/internal/database"
-	"github.com/go-chi/chi/v5"
 	"net/http"
 )
 
-func (apiCfg *apiConfig) handlerGetArtistsAlbums(w http.ResponseWriter, r *http.Request) {
-	artistName := chi.URLParam(r, "artistName")
-
-	type parameters struct {
-		Name string `json:"name"`
-	}
-	decoder := json.NewDecoder(r.Body)
-
-	params := parameters{}
-	err := decoder.Decode(&params)
-	if err != nil {
-		responseWithError(w, 400, fmt.Sprintf("Error parsing JSON: %v", err))
-		return
-	}
-
+func (apiCfg *apiConfig) handlerGetArtistsAlbums(w http.ResponseWriter, r *http.Request, albumName, artistName string) {
 	artist, err := apiCfg.DB.GetArtistByName(r.Context(), artistName)
 	if err != nil {
 		responseWithError(w, 404, fmt.Sprintf("Couldn't find artist: %v", err))
 		return
 	}
 
-	if params.Name == "" {
+	if albumName == "" {
 		dbAlbums, err := apiCfg.DB.GetArtistsAlbums(r.Context(), artist.ID)
 		if err != nil {
 			responseWithError(w, 404, fmt.Sprintf("Couldn't find %s's albums: %v", artist.Name, err))
@@ -45,11 +29,11 @@ func (apiCfg *apiConfig) handlerGetArtistsAlbums(w http.ResponseWriter, r *http.
 		responseWithJSON(w, 200, albums)
 	} else {
 		dbAlbum, err := apiCfg.DB.GetAlbumByNameAndArtist(r.Context(), database.GetAlbumByNameAndArtistParams{
-			Name:     params.Name,
+			Name:     albumName,
 			ArtistID: artist.ID,
 		})
 		if err != nil {
-			responseWithError(w, 404, fmt.Sprintf("Couldn't find %s's album with name %s: %v", artist.Name, params.Name, err))
+			responseWithError(w, 404, fmt.Sprintf("Couldn't find %s's album with name %s: %v", artist.Name, albumName, err))
 			return
 		}
 
@@ -63,21 +47,7 @@ func (apiCfg *apiConfig) handlerGetArtistsAlbums(w http.ResponseWriter, r *http.
 	}
 }
 
-func (apiCfg *apiConfig) handlerGetArtistsSongs(w http.ResponseWriter, r *http.Request) {
-	artistName := chi.URLParam(r, "artistName")
-
-	type parameters struct {
-		Name string `json:"name"`
-	}
-	decoder := json.NewDecoder(r.Body)
-
-	params := parameters{}
-	err := decoder.Decode(&params)
-	if err != nil {
-		responseWithError(w, 400, fmt.Sprintf("Error parsing JSON: %v", err))
-		return
-	}
-
+func (apiCfg *apiConfig) handlerGetArtistsSongs(w http.ResponseWriter, r *http.Request, songName, artistName string) {
 	artist, err := apiCfg.DB.GetArtistByName(r.Context(), artistName)
 	if err != nil {
 		responseWithError(w, 404, fmt.Sprintf("Couldn't find artist: %v", err))
@@ -85,7 +55,7 @@ func (apiCfg *apiConfig) handlerGetArtistsSongs(w http.ResponseWriter, r *http.R
 	}
 
 	var dbSongs []database.Song
-	if params.Name == "" {
+	if songName == "" {
 		dbSongs, err = apiCfg.DB.GetSongsByArtist(r.Context(), artist.ID)
 		if err != nil {
 			responseWithError(w, 404, fmt.Sprintf("Couldn't find %s's songs: %v", artist.Name, err))
@@ -93,11 +63,11 @@ func (apiCfg *apiConfig) handlerGetArtistsSongs(w http.ResponseWriter, r *http.R
 		}
 	} else {
 		dbSongs, err = apiCfg.DB.GetSongsByNameAndArtist(r.Context(), database.GetSongsByNameAndArtistParams{
-			Name:     params.Name,
+			Name:     songName,
 			ArtistID: artist.ID,
 		})
 		if err != nil {
-			responseWithError(w, 404, fmt.Sprintf("Couldn't find %s's songs with name %s: %v", artist.Name, params.Name, err))
+			responseWithError(w, 404, fmt.Sprintf("Couldn't find %s's songs with name %s: %v", artist.Name, songName, err))
 			return
 		}
 	}

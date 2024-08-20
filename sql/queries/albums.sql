@@ -24,10 +24,14 @@ WHERE id = $1
 LIMIT 1;
 
 -- name: GetAlbumsArtist :one
-SELECT users.name FROM users
+SELECT users.id, users.name FROM users
 JOIN albums ON albums.artist_id = users.id
 WHERE albums.id = $1;
 
 -- name: GetAllAlbums :many
 SELECT * FROM albums
 ORDER BY name ASC;
+
+-- name: DeleteAlbum :exec
+DELETE FROM albums
+WHERE id = $1;

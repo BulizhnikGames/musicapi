@@ -3,19 +3,29 @@ package main
 import (
 	"context"
 	"github.com/BulizhnikGames/musicapi/internal/database"
+	"github.com/google/uuid"
 )
 
 type Song struct {
-	Name    string   `json:"Name"`
-	Likes   int64    `json:"Likes"`
-	Album   string   `json:"Album"`
-	Artists []string `json:"Artists"`
+	ID      uuid.UUID `json:"id"`
+	Name    string    `json:"Name"`
+	Likes   int64     `json:"Likes"`
+	Album   string    `json:"Album"`
+	Artists []string  `json:"Artists"`
 }
 
 type Album struct {
-	Name   string `json:"Name"`
-	Artist string `json:"Artist"`
-	Songs  []Song `json:"Songs"`
+	ID     uuid.UUID `json:"ID"`
+	Name   string    `json:"Name"`
+	Artist string    `json:"Artist"`
+	Songs  []Song    `json:"Songs"`
+}
+
+type Playlist struct {
+	ID      uuid.UUID `json:"id"`
+	Name    string    `json:"Name"`
+	OwnerID uuid.UUID `json:"Owner"`
+	Songs   []Song    `json:"Songs"`
 }
 
 func (apiCfg *apiConfig) databaseSongToSong(ctx context.Context, song database.Song) (Song, error) {
@@ -35,6 +45,7 @@ func (apiCfg *apiConfig) databaseSongToSong(ctx context.Context, song database.S
 	}
 
 	return Song{
+		ID:      song.ID,
 		Name:    song.Name,
 		Likes:   likes,
 		Album:   album.Name,
@@ -71,8 +82,9 @@ func (apiCfg *apiConfig) databaseAlbumToAlbum(ctx context.Context, album databas
 	}
 
 	return Album{
+		ID:     album.ID,
 		Name:   album.Name,
-		Artist: artist,
+		Artist: artist.Name,
 		Songs:  songs,
 	}, nil
 }
@@ -85,6 +97,37 @@ func (apiCfg *apiConfig) databaseAlbumsToAlbums(ctx context.Context, albums []da
 			return []Album{}, err
 		}
 		res = append(res, album)
+	}
+	return res, nil
+}
+
+func (apiCfg *apiConfig) databasePlaylistToPlaylist(ctx context.Context, playlist database.Playlist) (Playlist, error) {
+	dbSongs, err := apiCfg.DB.GetSongsInPlaylist(ctx, playlist.ID)
+	if err != nil {
+		return Playlist{}, err
+	}
+
+	songs, err := apiCfg.databaseSongsToSongs(ctx, dbSongs)
+	if err != nil {
+		return Playlist{}, err
+	}
+
+	return Playlist{
+		ID:      playlist.ID,
+		Name:    playlist.Name,
+		OwnerID: playlist.OwnerID,
+		Songs:   songs,
+	}, nil
+}
+
+func (apiCfg *apiConfig) databasePlaylistsToPlaylists(ctx context.Context, playlists []database.Playlist) ([]Playlist, error) {
+	res := []Playlist{}
+	for _, dbPlaylist := range playlists {
+		playlist, err := apiCfg.databasePlaylistToPlaylist(ctx, dbPlaylist)
+		if err != nil {
+			return []Playlist{}, err
+		}
+		res = append(res, playlist)
 	}
 	return res, nil
 }

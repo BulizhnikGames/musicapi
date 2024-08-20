@@ -45,6 +45,16 @@ func (q *Queries) CreateAlbum(ctx context.Context, arg CreateAlbumParams) (Album
 	return i, err
 }
 
+const deleteAlbum = `-- name: DeleteAlbum :exec
+DELETE FROM albums
+WHERE id = $1
+`
+
+func (q *Queries) DeleteAlbum(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.ExecContext(ctx, deleteAlbum, id)
+	return err
+}
+
 const getAlbumByID = `-- name: GetAlbumByID :one
 SELECT id, created_at, updated_at, name, artist_id FROM albums
 WHERE id = $1
@@ -89,16 +99,21 @@ func (q *Queries) GetAlbumByNameAndArtist(ctx context.Context, arg GetAlbumByNam
 }
 
 const getAlbumsArtist = `-- name: GetAlbumsArtist :one
-SELECT users.name FROM users
+SELECT users.id, users.name FROM users
 JOIN albums ON albums.artist_id = users.id
 WHERE albums.id = $1
 `
 
-func (q *Queries) GetAlbumsArtist(ctx context.Context, id uuid.UUID) (string, error) {
+type GetAlbumsArtistRow struct {
+	ID   uuid.UUID
+	Name string
+}
+
+func (q *Queries) GetAlbumsArtist(ctx context.Context, id uuid.UUID) (GetAlbumsArtistRow, error) {
 	row := q.db.QueryRowContext(ctx, getAlbumsArtist, id)
-	var name string
-	err := row.Scan(&name)
-	return name, err
+	var i GetAlbumsArtistRow
+	err := row.Scan(&i.ID, &i.Name)
+	return i, err
 }
 
 const getAlbumsByName = `-- name: GetAlbumsByName :many

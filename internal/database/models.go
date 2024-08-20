@@ -39,6 +39,7 @@ type Playlist struct {
 type PlaylistsSong struct {
 	PlaylistID uuid.UUID
 	SongID     uuid.UUID
+	AddTime    time.Time
 }
 
 type Song struct {

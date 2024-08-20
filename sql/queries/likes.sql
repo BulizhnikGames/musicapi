@@ -12,3 +12,7 @@ ORDER BY songs.name ASC;
 -- name: GetSongsLikeCount :one
 SELECT COUNT(*) FROM likes
 WHERE song_id = $1;
+
+-- name: UnlikeSong :exec
+DELETE FROM likes
+WHERE user_id = $1 AND song_id = $2;
