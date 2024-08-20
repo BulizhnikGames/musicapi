@@ -1,16 +1,14 @@
 -- +goose Up
 
-CREATE TABLE users(
+CREATE TABLE songs(
     id UUID PRIMARY KEY,
     created_at TIMESTAMP NOT NULL,
     updated_at TIMESTAMP NOT NULL,
     name TEXT NOT NULL,
-    email TEXT NOT NULL,
-    password TEXT NOT NULL,
-    is_artist BOOLEAN NOT NULL,
-    UNIQUE (email, password)
+    album_id UUID NOT NULL REFERENCES albums(id) ON DELETE CASCADE,
+    UNIQUE (name, album_id)
 );
 
 -- +goose Down
 
-DROP TABLE users;
+DROP TABLE songs;
