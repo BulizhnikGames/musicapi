@@ -7,8 +7,8 @@ CREATE TABLE users(
     name TEXT NOT NULL,
     email TEXT NOT NULL,
     password TEXT NOT NULL,
-    UNIQUE (email, password),
-    is_artist BOOLEAN NOT NULL
+    is_artist BOOLEAN NOT NULL,
+    UNIQUE (email, password)
 );
 
 -- +goose Down

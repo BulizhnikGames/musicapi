@@ -10,6 +10,27 @@ import (
 	"github.com/google/uuid"
 )
 
+type Album struct {
+	ID        uuid.UUID
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	Name      string
+	ArtistID  uuid.UUID
+}
+
+type ArtistsSong struct {
+	ArtistID uuid.UUID
+	SongID   uuid.UUID
+}
+
+type Song struct {
+	ID        uuid.UUID
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	Name      string
+	AlbumID   uuid.UUID
+}
+
 type User struct {
 	ID        uuid.UUID
 	CreatedAt time.Time

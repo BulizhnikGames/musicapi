@@ -51,6 +51,28 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 	return i, err
 }
 
+const getArtistByName = `-- name: GetArtistByName :one
+SELECT id, created_at, updated_at, name, email, password, is_artist FROM users
+WHERE is_artist = true AND name = $1
+ORDER BY id ASC
+LIMIT 1
+`
+
+func (q *Queries) GetArtistByName(ctx context.Context, name string) (User, error) {
+	row := q.db.QueryRowContext(ctx, getArtistByName, name)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Name,
+		&i.Email,
+		&i.Password,
+		&i.IsArtist,
+	)
+	return i, err
+}
+
 const getUserByEmailAndPassword = `-- name: GetUserByEmailAndPassword :one
 SELECT id, created_at, updated_at, name, email, password, is_artist FROM users WHERE email = $1 AND password = $2
 `
@@ -62,6 +84,27 @@ type GetUserByEmailAndPasswordParams struct {
 
 func (q *Queries) GetUserByEmailAndPassword(ctx context.Context, arg GetUserByEmailAndPasswordParams) (User, error) {
 	row := q.db.QueryRowContext(ctx, getUserByEmailAndPassword, arg.Email, arg.Password)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Name,
+		&i.Email,
+		&i.Password,
+		&i.IsArtist,
+	)
+	return i, err
+}
+
+const getUserByID = `-- name: GetUserByID :one
+SELECT id, created_at, updated_at, name, email, password, is_artist FROM users
+WHERE id = $1
+LIMIT 1
+`
+
+func (q *Queries) GetUserByID(ctx context.Context, id uuid.UUID) (User, error) {
+	row := q.db.QueryRowContext(ctx, getUserByID, id)
 	var i User
 	err := row.Scan(
 		&i.ID,

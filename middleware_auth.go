@@ -26,7 +26,7 @@ func (apiCfg apiConfig) middlewareAuth(handler authHandler) http.HandlerFunc {
 			Password: password,
 		})
 		if err != nil {
-			responseWithError(w, 401, fmt.Sprintf("Couldn't get user: %v", err))
+			responseWithError(w, 401, fmt.Sprintf("Couldn't get user (auth error): %v", err))
 			return
 		}
 

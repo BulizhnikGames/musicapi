@@ -56,8 +56,17 @@ func main() {
 	v1Router.Get("/r", handlerReadiness)
 	v1Router.Get("/err", handlerErr)
 
-	v1Router.Post("/user", apiCfg.handlerCreateUser)
-	v1Router.Get("/user", apiCfg.middlewareAuth(apiCfg.handlerGetUser))
+	v1Router.Post("/users", apiCfg.handlerCreateUser)
+	v1Router.Get("/users", apiCfg.middlewareAuth(apiCfg.handlerGetUser))
+
+	v1Router.Post("/albums", apiCfg.middlewareAuth(apiCfg.handlerCreateAlbum))
+	v1Router.Get("/albums", apiCfg.handlerGetAlbums) //Should also return all additional data
+
+	v1Router.Post("/songs", apiCfg.middlewareAuth(apiCfg.handlerCreateSong))
+	v1Router.Get("/songs", apiCfg.handlerGetSongs) //Should also return all additional data
+
+	v1Router.Get("/albums/{artistName}", apiCfg.handlerGetArtistsAlbums)
+	v1Router.Get("/songs/{artistName}", apiCfg.handlerGetArtistsSongs)
 
 	router.Mount("/v1", v1Router)
 

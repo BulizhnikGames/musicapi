@@ -25,6 +25,14 @@ func (apiCfg *apiConfig) handlerCreateUser(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
+	if params.Is_artist {
+		_, err = apiCfg.DB.GetArtistByName(r.Context(), params.Name)
+		if err == nil {
+			responseWithError(w, 400, fmt.Sprintf("Artist %s already exists", params.Name))
+			return
+		}
+	}
+
 	user, err := apiCfg.DB.CreateUser(r.Context(), database.CreateUserParams{
 		ID:        uuid.New(),
 		CreatedAt: time.Now(),
@@ -39,7 +47,7 @@ func (apiCfg *apiConfig) handlerCreateUser(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	responseWithJSON(w, 200, user)
+	responseWithJSON(w, 201, user)
 }
 
 func (apiCfg *apiConfig) handlerGetUser(w http.ResponseWriter, r *http.Request, user database.User) {
