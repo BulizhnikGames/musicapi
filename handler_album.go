@@ -65,13 +65,13 @@ func (apiCfg *apiConfig) handlerGetAlbums(w http.ResponseWriter, r *http.Request
 	if params.Name != "" {
 		dbAlbums, err = apiCfg.DB.GetAlbumsByName(r.Context(), params.Name)
 		if err != nil {
-			responseWithError(w, 400, fmt.Sprintf("Error getting albums with name (%s): %v", params.Name, err))
+			responseWithError(w, 404, fmt.Sprintf("Error getting albums with name (%s): %v", params.Name, err))
 			return
 		}
 	} else {
 		dbAlbums, err = apiCfg.DB.GetAllAlbums(r.Context())
 		if err != nil {
-			responseWithError(w, 400, fmt.Sprintf("Error getting all albums: %v", err))
+			responseWithError(w, 404, fmt.Sprintf("Error getting all albums: %v", err))
 			return
 		}
 	}

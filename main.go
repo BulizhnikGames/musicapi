@@ -68,6 +68,10 @@ func main() {
 	v1Router.Get("/albums/{artistName}", apiCfg.handlerGetArtistsAlbums)
 	v1Router.Get("/songs/{artistName}", apiCfg.handlerGetArtistsSongs)
 
+	v1Router.Post("/likes/{songID}", apiCfg.middlewareAuth(apiCfg.handlerLikeSongByID))
+	v1Router.Post("/likes", apiCfg.middlewareAuth(apiCfg.handlerLikeSong))
+	v1Router.Get("/likes", apiCfg.middlewareAuth(apiCfg.handlerGetUsersLikes))
+
 	router.Mount("/v1", v1Router)
 
 	srv := &http.Server{

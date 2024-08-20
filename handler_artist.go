@@ -6,12 +6,10 @@ import (
 	"github.com/BulizhnikGames/musicapi/internal/database"
 	"github.com/go-chi/chi/v5"
 	"net/http"
-	"strings"
 )
 
 func (apiCfg *apiConfig) handlerGetArtistsAlbums(w http.ResponseWriter, r *http.Request) {
 	artistName := chi.URLParam(r, "artistName")
-	artistName = strings.ReplaceAll(artistName, "+", " ")
 
 	type parameters struct {
 		Name string `json:"name"`
@@ -27,14 +25,14 @@ func (apiCfg *apiConfig) handlerGetArtistsAlbums(w http.ResponseWriter, r *http.
 
 	artist, err := apiCfg.DB.GetArtistByName(r.Context(), artistName)
 	if err != nil {
-		responseWithError(w, 400, fmt.Sprintf("Couldn't find artist: %v", err))
+		responseWithError(w, 404, fmt.Sprintf("Couldn't find artist: %v", err))
 		return
 	}
 
 	if params.Name == "" {
 		dbAlbums, err := apiCfg.DB.GetArtistsAlbums(r.Context(), artist.ID)
 		if err != nil {
-			responseWithError(w, 400, fmt.Sprintf("Couldn't find %s's albums: %v", artist.Name, err))
+			responseWithError(w, 404, fmt.Sprintf("Couldn't find %s's albums: %v", artist.Name, err))
 			return
 		}
 
@@ -51,7 +49,7 @@ func (apiCfg *apiConfig) handlerGetArtistsAlbums(w http.ResponseWriter, r *http.
 			ArtistID: artist.ID,
 		})
 		if err != nil {
-			responseWithError(w, 400, fmt.Sprintf("Couldn't find %s's album with name %s: %v", artist.Name, params.Name, err))
+			responseWithError(w, 404, fmt.Sprintf("Couldn't find %s's album with name %s: %v", artist.Name, params.Name, err))
 			return
 		}
 
@@ -67,7 +65,6 @@ func (apiCfg *apiConfig) handlerGetArtistsAlbums(w http.ResponseWriter, r *http.
 
 func (apiCfg *apiConfig) handlerGetArtistsSongs(w http.ResponseWriter, r *http.Request) {
 	artistName := chi.URLParam(r, "artistName")
-	artistName = strings.ReplaceAll(artistName, "+", " ")
 
 	type parameters struct {
 		Name string `json:"name"`
@@ -83,7 +80,7 @@ func (apiCfg *apiConfig) handlerGetArtistsSongs(w http.ResponseWriter, r *http.R
 
 	artist, err := apiCfg.DB.GetArtistByName(r.Context(), artistName)
 	if err != nil {
-		responseWithError(w, 400, fmt.Sprintf("Couldn't find artist: %v", err))
+		responseWithError(w, 404, fmt.Sprintf("Couldn't find artist: %v", err))
 		return
 	}
 
@@ -91,7 +88,7 @@ func (apiCfg *apiConfig) handlerGetArtistsSongs(w http.ResponseWriter, r *http.R
 	if params.Name == "" {
 		dbSongs, err = apiCfg.DB.GetSongsByArtist(r.Context(), artist.ID)
 		if err != nil {
-			responseWithError(w, 400, fmt.Sprintf("Couldn't find %s's songs: %v", artist.Name, err))
+			responseWithError(w, 404, fmt.Sprintf("Couldn't find %s's songs: %v", artist.Name, err))
 			return
 		}
 	} else {
@@ -100,7 +97,7 @@ func (apiCfg *apiConfig) handlerGetArtistsSongs(w http.ResponseWriter, r *http.R
 			ArtistID: artist.ID,
 		})
 		if err != nil {
-			responseWithError(w, 400, fmt.Sprintf("Couldn't find %s's songs with name %s: %v", artist.Name, params.Name, err))
+			responseWithError(w, 404, fmt.Sprintf("Couldn't find %s's songs with name %s: %v", artist.Name, params.Name, err))
 			return
 		}
 	}

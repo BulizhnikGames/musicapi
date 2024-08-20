@@ -23,6 +23,24 @@ type ArtistsSong struct {
 	SongID   uuid.UUID
 }
 
+type Like struct {
+	UserID uuid.UUID
+	SongID uuid.UUID
+}
+
+type Playlist struct {
+	ID        uuid.UUID
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	Name      string
+	OwnerID   uuid.UUID
+}
+
+type PlaylistsSong struct {
+	PlaylistID uuid.UUID
+	SongID     uuid.UUID
+}
+
 type Song struct {
 	ID        uuid.UUID
 	CreatedAt time.Time

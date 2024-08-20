@@ -7,6 +7,7 @@ import (
 
 type Song struct {
 	Name    string   `json:"Name"`
+	Likes   int64    `json:"Likes"`
 	Album   string   `json:"Album"`
 	Artists []string `json:"Artists"`
 }
@@ -18,6 +19,11 @@ type Album struct {
 }
 
 func (apiCfg *apiConfig) databaseSongToSong(ctx context.Context, song database.Song) (Song, error) {
+	likes, err := apiCfg.DB.GetSongsLikeCount(ctx, song.ID)
+	if err != nil {
+		return Song{}, err
+	}
+
 	album, err := apiCfg.DB.GetAlbumByID(ctx, song.AlbumID)
 	if err != nil {
 		return Song{}, err
@@ -27,8 +33,10 @@ func (apiCfg *apiConfig) databaseSongToSong(ctx context.Context, song database.S
 	if err != nil {
 		return Song{}, err
 	}
+
 	return Song{
 		Name:    song.Name,
+		Likes:   likes,
 		Album:   album.Name,
 		Artists: artists,
 	}, nil
