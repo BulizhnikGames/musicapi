@@ -13,12 +13,12 @@ func (apiCfg apiConfig) middlewareAuth(handler authHandler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		email, err := auth.GetEmail(r.Header)
 		if err != nil {
-			responseWithError(w, 401, fmt.Sprintf("auth error: %v", err))
+			responseWithError(w, 400, fmt.Sprintf("auth error: %v", err))
 			return
 		}
 		password, err := auth.GetPassword(r.Header)
 		if err != nil {
-			responseWithError(w, 401, fmt.Sprintf("auth error: %v", err))
+			responseWithError(w, 400, fmt.Sprintf("auth error: %v", err))
 			return
 		}
 		user, err := apiCfg.DB.GetUserByEmailAndPassword(r.Context(), database.GetUserByEmailAndPasswordParams{
